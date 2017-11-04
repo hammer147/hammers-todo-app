@@ -1,4 +1,4 @@
-const {MongoClient, ObjectID} = require('mongodb');
+const { MongoClient, ObjectID } = require('mongodb');
 
 MongoClient.connect('mongodb://localhost:27017/TodoApp', (err, db) => {
     if (err) {
@@ -19,14 +19,14 @@ MongoClient.connect('mongodb://localhost:27017/TodoApp', (err, db) => {
     // });
 
     db.collection('Users').insertOne({
-    	name: 'Ben',
-    	age: 45,
-    	location: 'Belgium'
+        name: 'Ben',
+        age: 45,
+        location: 'Belgium'
     }, (err, result) => {
-    	if(err) {
-    		return console.error('Unable to add user', err);
-    	}
-    	console.log(JSON.stringify(result.ops, undefined, 2));
+        if (err) {
+            return console.error('Unable to add user', err);
+        }
+        console.log(JSON.stringify(result.ops, undefined, 2));
     });
 
     db.close();
