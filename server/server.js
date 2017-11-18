@@ -9,6 +9,8 @@ const { mongoose } = require('./db/mongoose');
 const { Todo } = require('./models/todo');
 const { User } = require('./models/user');
 
+const { authenticate } = require('./middleware/authenticate');
+
 const app = express();
 const port = process.env.PORT;
 
@@ -54,6 +56,9 @@ app.post('/users', (req, res) => {
 });
 
 
+app.get('/users/me', authenticate, (req, res) => {
+    res.send(req.user);
+});
 
 app.get('/todos', (req, res) => {
     Todo.find().then((todos) => {
@@ -99,7 +104,7 @@ app.patch('/todos/:id', (req, res) => {
     const allowed = ['text', 'completed'];
 
     const body = _.pick(req.body, allowed);
-    
+
     /*
     // or without lodash in native js
     const body = Object.keys(req.body)

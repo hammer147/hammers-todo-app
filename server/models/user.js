@@ -11,7 +11,7 @@ const UserSchema = new mongoose.Schema({
         required: true,
         unique: true,
         validate: {
-        	isAsync: false, // (1)
+            isAsync: false, // (1)
             validator: validator.isEmail,
             message: '{VALUE} is not a valid email'
         }
@@ -33,11 +33,14 @@ const UserSchema = new mongoose.Schema({
     }]
 });
 
+
+// UserSchema.methods <-- instance methods
+
 // make sure password and tokens are never returned
-UserSchema.methods.toJSON = function () {
-	const user = this;
-	const userObject = user.toObject();
-	return _.pick(userObject, ['_id', 'email']);
+UserSchema.methods.toJSON = function() {
+    const user = this;
+    const userObject = user.toObject();
+    return _.pick(userObject, ['_id', 'email']);
 };
 
 UserSchema.methods.generateAuthToken = function() {
@@ -51,6 +54,31 @@ UserSchema.methods.generateAuthToken = function() {
         return token;
     });
 };
+
+
+// UserSchema.statics <-- model methods
+
+UserSchema.statics.findByToken = function(token) {
+    const User = this;
+    let decoded;
+
+    try {
+        decoded = jwt.verify(token, 'abc123');
+    } catch (e) {
+        // return new Promise((resolve, reject) => {
+        // 	reject();
+        // });
+        return Promise.reject();
+    }
+
+    return User.findOne({
+        '_id': decoded._id,
+        'tokens.token': token,
+        'tokens.access': 'auth'
+    });
+};
+
+
 
 const User = mongoose.model('User', UserSchema);
 
