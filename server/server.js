@@ -4,6 +4,7 @@ const _ = require('lodash');
 const { ObjectID } = require('mongodb');
 const express = require('express');
 const bodyParser = require('body-parser');
+const bcrypt = require('bcryptjs');
 
 const { mongoose } = require('./db/mongoose');
 const { Todo } = require('./models/todo');
@@ -26,38 +27,6 @@ app.post('/todos', (req, res) => {
     }, (e) => {
         res.status(400).send(e);
     });
-});
-
-app.post('/users', (req, res) => {
-
-    const allowed = ['email', 'password'];
-
-    const body = _.pick(req.body, allowed);
-
-    /*
-    // or without lodash in native js
-    const body = Object.keys(req.body)
-        .filter(key => allowed.includes(key))
-        .reduce((obj, key) => {
-            obj[key] = req.body[key];
-            return obj;
-        }, {});
-    */
-
-    const user = new User(body);
-
-    user.save().then(() => {
-        return user.generateAuthToken();
-    }).then((token) => {
-        res.header('x-auth', token).send(user);
-    }).catch((e) => {
-        res.status(400).send(e);
-    });
-});
-
-
-app.get('/users/me', authenticate, (req, res) => {
-    res.send(req.user);
 });
 
 app.get('/todos', (req, res) => {
@@ -134,6 +103,57 @@ app.patch('/todos/:id', (req, res) => {
     }).catch((e) => res.status(400).send());
 
 });
+
+app.post('/users', (req, res) => {
+
+    const allowed = ['email', 'password'];
+
+    const body = _.pick(req.body, allowed);
+
+    /*
+    // or without lodash in native js
+    const body = Object.keys(req.body)
+        .filter(key => allowed.includes(key))
+        .reduce((obj, key) => {
+            obj[key] = req.body[key];
+            return obj;
+        }, {});
+    */
+
+    const user = new User(body);
+
+    user.save().then(() => {
+        return user.generateAuthToken();
+    }).then((token) => {
+        res.header('x-auth', token).send(user);
+    }).catch((e) => {
+        res.status(400).send(e);
+    });
+});
+
+
+app.get('/users/me', authenticate, (req, res) => {
+    res.send(req.user);
+});
+
+
+app.post('/users/login', (req, res) => {
+
+    const allowed = ['email', 'password'];
+    const body = _.pick(req.body, allowed);
+
+    User.findByCredentials(body.email, body.password)
+        .then((user) => {
+            return user.generateAuthToken().then((token) => {
+                res.header('x-auth', token).send(user);
+            });
+        })
+        .catch((e) => {
+            res.status(400).send();
+        });
+});
+
+
 
 app.listen(port, () => {
     console.log(`Started up at port ${port}`);
